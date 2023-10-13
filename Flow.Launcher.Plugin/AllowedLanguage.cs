@@ -11,6 +11,11 @@ namespace Flow.Launcher.Plugin
         /// Python
         /// </summary>
         public const string Python = "Python";
+                
+        /// <summary>
+        /// Python V2
+        /// </summary>
+        public const string PythonV2 = "Python_v2";
 
         /// <summary>
         /// C#
@@ -57,6 +62,7 @@ namespace Flow.Launcher.Plugin
         {
             return IsDotNet(language)
                 || language.Equals(Python, StringComparison.OrdinalIgnoreCase)
+                || language.Equals(PythonV2, StringComparison.OrdinalIgnoreCase)
                 || language.Equals(Executable, StringComparison.OrdinalIgnoreCase)
                 || language.Equals(TypeScript, StringComparison.OrdinalIgnoreCase)
                 || language.Equals(JavaScript, StringComparison.OrdinalIgnoreCase);

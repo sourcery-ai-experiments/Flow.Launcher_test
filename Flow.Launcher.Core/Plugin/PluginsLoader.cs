@@ -21,9 +21,11 @@ namespace Flow.Launcher.Core.Plugin
             var dotnetPlugins = DotNetPlugins(metadatas);
             
             var pythonEnv = new PythonEnvironment(metadatas, settings);
+            var pythonV2Env = new PythonV2Environment(metadatas, settings);
             var tsEnv = new TypeScriptEnvironment(metadatas, settings);
             var jsEnv = new JavaScriptEnvironment(metadatas, settings);
             var pythonPlugins = pythonEnv.Setup();
+            var pythonV2Plugins = pythonV2Env.Setup();
             var tsPlugins = tsEnv.Setup();
             var jsPlugins = jsEnv.Setup();
             
@@ -31,6 +33,7 @@ namespace Flow.Launcher.Core.Plugin
             
             var plugins = dotnetPlugins
                             .Concat(pythonPlugins)
+                            .Concat(pythonV2Plugins)
                             .Concat(tsPlugins)
                             .Concat(jsPlugins)
                             .Concat(executablePlugins)
