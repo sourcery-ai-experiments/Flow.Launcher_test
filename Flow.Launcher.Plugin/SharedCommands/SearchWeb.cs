@@ -1,4 +1,4 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -60,7 +60,7 @@ namespace Flow.Launcher.Plugin.SharedCommands
 
             try
             {
-                Process.Start(psi);
+                Process.Start(psi)?.Dispose();
             }
             catch (System.ComponentModel.Win32Exception)
             {
@@ -69,12 +69,6 @@ namespace Flow.Launcher.Plugin.SharedCommands
                     FileName = url, UseShellExecute = true
                 });
             }
-        }
-
-        [Obsolete("This is provided for backwards compatibility after 1.9.0 release, e.g. GitHub plugin. Use the new method instead")]
-        public static void NewBrowserWindow(this string url, string browserPath = "")
-        {
-            OpenInBrowserWindow(url, browserPath);
         }
 
         /// <summary> 
@@ -100,7 +94,7 @@ namespace Flow.Launcher.Plugin.SharedCommands
                     psi.FileName = url;
                 }
 
-                Process.Start(psi);
+                Process.Start(psi)?.Dispose();
             }
             // This error may be thrown if browser path is incorrect
             catch (System.ComponentModel.Win32Exception)
@@ -110,12 +104,6 @@ namespace Flow.Launcher.Plugin.SharedCommands
                     FileName = url, UseShellExecute = true
                 });
             }
-        }
-
-        [Obsolete("This is provided for backwards compatibility after 1.9.0 release, e.g. GitHub plugin. Use the new method instead")]
-        public static void NewTabInBrowser(this string url, string browserPath = "")
-        {
-            OpenInBrowserTab(url, browserPath);
         }
     }
 }

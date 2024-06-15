@@ -1,21 +1,18 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.IO.Pipes;
-using System.Runtime.Serialization.Formatters;
 using System.Security;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Threading;
 
 // http://blogs.microsoft.co.il/arik/2010/05/28/wpf-single-instance-application/
 // modified to allow single instace restart
-namespace Flow.Launcher.Helper 
+namespace Flow.Launcher.Helper
 {
     internal enum WM
     {
@@ -382,28 +379,6 @@ namespace Flow.Launcher.Helper
             }
 
             ((TApplication)Application.Current).OnSecondAppStarted();
-        }
-
-        #endregion
-
-        #region Private Classes
-
-        /// <summary>
-        /// Remoting service class which is exposed by the server i.e the first instance and called by the second instance
-        /// to pass on the command line arguments to the first instance and cause it to activate itself.
-        /// </summary>
-        private class IPCRemoteService : MarshalByRefObject
-        {
-
-            /// <summary>
-            /// Remoting Object's ease expires after every 5 minutes by default. We need to override the InitializeLifetimeService class
-            /// to ensure that lease never expires.
-            /// </summary>
-            /// <returns>Always null.</returns>
-            public override object InitializeLifetimeService()
-            {
-                return null;
-            }
         }
 
         #endregion

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -6,7 +6,6 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using Mages.Core;
-using Flow.Launcher.Infrastructure.Storage;
 using Flow.Launcher.Plugin.Caculator.ViewModels;
 using Flow.Launcher.Plugin.Caculator.Views;
 
@@ -20,11 +19,15 @@ namespace Flow.Launcher.Plugin.Caculator
                         @"sin|cos|tan|arcsin|arccos|arctan|" +
                         @"eigval|eigvec|eig|sum|polar|plot|round|sort|real|zeta|" +
                         @"bin2dec|hex2dec|oct2dec|" +
-                        @"==|~=|&&|\|\||" +
-                        @"[ei]|[0-9]|[\+\-\*\/\^\., ""]|[\(\)\|\!\[\]]" +
+                        @"factorial|sign|isprime|isinfty|" +
+                        @"==|~=|&&|\|\||(?:\<|\>)=?|" +
+                        @"[ei]|[0-9]|[\+\%\-\*\/\^\., ""]|[\(\)\|\!\[\]]" +
                         @")+$", RegexOptions.Compiled);
         private static readonly Regex RegBrackets = new Regex(@"[\(\)\[\]]", RegexOptions.Compiled);
         private static Engine MagesEngine;
+        private const string comma = ",";
+        private const string dot = ".";
+
         private PluginInitContext Context { get; set; }
 
         private static Settings _settings;
@@ -35,7 +38,7 @@ namespace Flow.Launcher.Plugin.Caculator
             Context = context;
             _settings = context.API.LoadSettingJsonStorage<Settings>();
             _viewModel = new SettingsViewModel(_settings);
-            
+
             MagesEngine = new Engine(new Configuration
             {
                 Scope = new Dictionary<string, object>
@@ -54,7 +57,19 @@ namespace Flow.Launcher.Plugin.Caculator
 
             try
             {
-                var expression = query.Search.Replace(",", ".");
+                string expression;
+
+                switch (_settings.DecimalSeparator)
+                {
+                    case DecimalSeparator.Comma:
+                    case DecimalSeparator.UseSystemLocale when CultureInfo.DefaultThreadCurrentCulture.NumberFormat.NumberDecimalSeparator == ",":
+                        expression = query.Search.Replace(",", ".");
+                        break;
+                    default:
+                        expression = query.Search;
+                        break;
+                }
+
                 var result = MagesEngine.Interpret(expression);
 
                 if (result?.ToString() == "NaN")
@@ -76,14 +91,15 @@ namespace Flow.Launcher.Plugin.Caculator
                             IcoPath = "Images/calculator.png",
                             Score = 300,
                             SubTitle = Context.API.GetTranslation("flowlauncher_plugin_calculator_copy_number_to_clipboard"),
+                            CopyText = newResult,
                             Action = c =>
                             {
                                 try
                                 {
-                                    Clipboard.SetDataObject(newResult);
+                                    Context.API.CopyToClipboard(newResult);
                                     return true;
                                 }
-                                catch (ExternalException e)
+                                catch (ExternalException)
                                 {
                                     MessageBox.Show("Copy failed, please try later");
                                     return false;
@@ -119,6 +135,10 @@ namespace Flow.Launcher.Plugin.Caculator
                 return false;
             }
 
+            if ((query.Search.Contains(dot) && GetDecimalSeparator() != dot) ||
+                (query.Search.Contains(comma) && GetDecimalSeparator() != comma))
+                return false;
+
             return true;
         }
 
@@ -138,12 +158,12 @@ namespace Flow.Launcher.Plugin.Caculator
 
         private string GetDecimalSeparator()
         {
-            string systemDecimalSeperator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+            string systemDecimalSeperator = CultureInfo.DefaultThreadCurrentCulture.NumberFormat.NumberDecimalSeparator;
             switch (_settings.DecimalSeparator)
             {
                 case DecimalSeparator.UseSystemLocale: return systemDecimalSeperator;
-                case DecimalSeparator.Dot: return ".";
-                case DecimalSeparator.Comma: return ",";
+                case DecimalSeparator.Dot: return dot;
+                case DecimalSeparator.Comma: return comma;
                 default: return systemDecimalSeperator;
             }
         }

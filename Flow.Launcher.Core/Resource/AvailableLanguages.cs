@@ -19,10 +19,14 @@ namespace Flow.Launcher.Core.Resource
         public static Language Serbian = new Language("sr", "Srpski");
         public static Language Portuguese_Portugal = new Language("pt-pt", "Português");
         public static Language Portuguese_Brazil = new Language("pt-br", "Português (Brasil)");
+        public static Language Spanish = new Language("es", "Spanish");
+        public static Language Spanish_LatinAmerica = new Language("es-419", "Spanish (Latin America)");
         public static Language Italian = new Language("it", "Italiano");
         public static Language Norwegian_Bokmal = new Language("nb-NO", "Norsk Bokmål");
-        public static Language Slovak = new Language("sk", "Slovenský");
+        public static Language Slovak = new Language("sk", "Slovenčina");
         public static Language Turkish = new Language("tr", "Türkçe");
+        public static Language Czech = new Language("cs", "čeština");
+        public static Language Arabic = new Language("ar", "اللغة العربية");
 
         public static List<Language> GetAvailableLanguages()
         {
@@ -43,10 +47,14 @@ namespace Flow.Launcher.Core.Resource
                 Serbian,
                 Portuguese_Portugal,
                 Portuguese_Brazil,
+                Spanish,
+                Spanish_LatinAmerica,
                 Italian,
                 Norwegian_Bokmal,
                 Slovak,
-                Turkish
+                Turkish,
+                Czech,
+                Arabic
             };
             return languages;
         }

@@ -1,7 +1,8 @@
-using Flow.Launcher.Plugin.SharedModels;
+﻿using Flow.Launcher.Plugin.SharedModels;
 using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -19,8 +20,8 @@ namespace Flow.Launcher.Plugin
         /// </summary>
         /// <param name="query">query text</param>
         /// <param name="requery">
-        /// force requery By default, Flow Launcher will not fire query if your query is same with existing one. 
-        /// Set this to true to force Flow Launcher requerying
+        /// Force requery. By default, Flow Launcher will not fire query if your query is same with existing one. 
+        /// Set this to <see langword="true"/> to force Flow Launcher requerying
         /// </param>
         void ChangeQuery(string query, bool requery = false);
 
@@ -37,12 +38,18 @@ namespace Flow.Launcher.Plugin
         /// <exception cref="FileNotFoundException">Thrown when unable to find the file specified in the command </exception>
         /// <exception cref="Win32Exception">Thrown when error occurs during the execution of the command </exception>
         void ShellRun(string cmd, string filename = "cmd.exe");
-        
+
         /// <summary>
-        /// Copy Text to clipboard
+        /// Copies the passed in text and shows a message indicating whether the operation was completed successfully.
+        /// When directCopy is set to true and passed in text is the path to a file or directory,
+        /// the actual file/directory will be copied to clipboard. Otherwise the text itself will still be copied to clipboard.
         /// </summary>
-        /// <param name="Text">Text to save on clipboard</param>
-        public void CopyToClipboard(string text);
+        /// <param name="text">Text to save on clipboard</param>
+        /// <param name="directCopy">When true it will directly copy the file/folder from the path specified in text</param>
+        /// <param name="showDefaultNotification">Whether to show the default notification from this method after copy is done. 
+        ///                                         It will show file/folder/text is copied successfully.
+        ///                                         Turn this off to show your own notification after copy is done.</param>>
+        public void CopyToClipboard(string text, bool directCopy = false, bool showDefaultNotification = true);
 
         /// <summary>
         /// Save everything, all of Flow Launcher and plugins' data and settings
@@ -80,6 +87,22 @@ namespace Flow.Launcher.Plugin
         void ShowMainWindow();
 
         /// <summary>
+        /// Hide MainWindow
+        /// </summary>
+        void HideMainWindow();
+
+        /// <summary>
+        /// Representing whether the main window is visible
+        /// </summary>
+        /// <returns></returns>
+        bool IsMainWindowVisible();
+
+        /// <summary>
+        /// Invoked when the visibility of the main window has changed. Currently, the plugin will continue to be subscribed even if it is turned off. 
+        /// </summary>
+        event VisibilityChangedEventHandler VisibilityChanged;
+
+        /// <summary>
         /// Show message box
         /// </summary>
         /// <param name="title">Message title</param>
@@ -115,13 +138,6 @@ namespace Flow.Launcher.Plugin
         /// <returns></returns>
         List<PluginPair> GetAllPlugins();
 
-        /// <summary>
-        /// Fired after global keyboard events
-        /// if you want to hook something like Ctrl+R, you should use this event
-        /// </summary>
-        [Obsolete("Unable to Retrieve correct return value")]
-        event FlowLauncherGlobalKeyboardEventHandler GlobalKeyboardEvent;
-        
         /// <summary>
         /// Register a callback for Global Keyboard Event
         /// </summary>
@@ -163,6 +179,7 @@ namespace Flow.Launcher.Plugin
         /// Download the specific url to a cretain file path
         /// </summary>
         /// <param name="url">URL to download file</param>
+        /// <param name="filePath">path to save downloaded file</param>
         /// <param name="token">place to store file</param>
         /// <returns>Task showing the progress</returns>
         Task HttpDownloadAsync([NotNull] string url, [NotNull] string filePath, CancellationToken token = default);
@@ -178,8 +195,15 @@ namespace Flow.Launcher.Plugin
         /// Remove ActionKeyword for specific plugin
         /// </summary>
         /// <param name="pluginId">ID for plugin that needs to remove action keyword</param>
-        /// <param name="newActionKeyword">The actionkeyword that is supposed to be removed</param>
+        /// <param name="oldActionKeyword">The actionkeyword that is supposed to be removed</param>
         void RemoveActionKeyword(string pluginId, string oldActionKeyword);
+
+        /// <summary>
+        /// Check whether specific ActionKeyword is assigned to any of the plugin
+        /// </summary>
+        /// <param name="actionKeyword">The actionkeyword for checking</param>
+        /// <returns>True if the actionkeyword is already assigned, False otherwise</returns>
+        bool ActionKeywordAssigned(string actionKeyword);
 
         /// <summary>
         /// Log debug message
@@ -224,12 +248,55 @@ namespace Flow.Launcher.Plugin
         /// Open directory in an explorer configured by user via Flow's Settings. The default is Windows Explorer
         /// </summary>
         /// <param name="DirectoryPath">Directory Path to open</param>
-        /// <param name="FileName">Extra FileName Info</param>
-        public void OpenDirectory(string DirectoryPath, string FileName = null);
+        /// <param name="FileNameOrFilePath">Extra FileName Info</param>
+        public void OpenDirectory(string DirectoryPath, string FileNameOrFilePath = null);
 
         /// <summary>
-        /// Opens the url. The browser and mode used is based on what's configured in Flow's default browser settings.
+        /// Opens the URL with the given Uri object. 
+        /// The browser and mode used is based on what's configured in Flow's default browser settings.
+        /// </summary>
+        public void OpenUrl(Uri url, bool? inPrivate = null);
+
+        /// <summary>
+        /// Opens the URL with the given string. 
+        /// The browser and mode used is based on what's configured in Flow's default browser settings.
+        /// Non-C# plugins should use this method.
         /// </summary>
         public void OpenUrl(string url, bool? inPrivate = null);
+
+        /// <summary>
+        /// Opens the application URI with the given Uri object, e.g. obsidian://search-query-example
+        /// </summary>
+        public void OpenAppUri(Uri appUri);
+
+        /// <summary>
+        /// Opens the application URI with the given string, e.g. obsidian://search-query-example
+        /// Non-C# plugins should use this method
+        /// </summary>
+        public void OpenAppUri(string appUri);
+
+        /// <summary>
+        /// Toggles Game Mode. off -> on and backwards
+        /// </summary>
+        public void ToggleGameMode();
+
+        /// <summary>
+        /// Switches Game Mode to given value
+        /// </summary>
+        /// <param name="value">New Game Mode status</param>
+        public void SetGameMode(bool value);
+
+        /// <summary>
+        /// Representing Game Mode status
+        /// </summary>
+        /// <returns></returns>
+        public bool IsGameModeOn();
+
+        /// <summary>
+        /// Reloads the query.
+        /// This method should run
+        /// </summary>
+        /// <param name="reselect">Choose the first result after reload if true; keep the last selected result if false. Default is true.</param>
+        public void ReQuery(bool reselect = true);
     }
 }

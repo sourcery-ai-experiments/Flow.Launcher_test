@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -16,16 +15,16 @@ namespace Flow.Launcher.Plugin.WebSearch.SuggestionSources
     {
         private readonly Regex _reg = new Regex("window.baidu.sug\\((.*)\\)");
 
-        public override async Task<List<string>> Suggestions(string query, CancellationToken token)
+        public override async Task<List<string>> SuggestionsAsync(string query, CancellationToken token)
         {
             string result;
 
             try
             {
                 const string api = "http://suggestion.baidu.com/su?json=1&wd=";
-                result = await Http.GetAsync(api + Uri.EscapeUriString(query), token).ConfigureAwait(false);
+                result = await Http.GetAsync(api + Uri.EscapeDataString(query), token).ConfigureAwait(false);
             }
-            catch (Exception e) when (e is HttpRequestException || e.InnerException is TimeoutException)
+            catch (Exception e) when (e is HttpRequestException or {InnerException: TimeoutException})
             {
                 Log.Exception("|Baidu.Suggestions|Can't get suggestion from baidu", e);
                 return null;

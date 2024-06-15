@@ -16,14 +16,15 @@ namespace Flow.Launcher
 {
     public partial class HotkeyControl : UserControl
     {
-        private Brush tbMsgForegroundColorOriginal;
-
-        private string tbMsgTextOriginal;
-
         public HotkeyModel CurrentHotkey { get; private set; }
         public bool CurrentHotkeyAvailable { get; private set; }
 
         public event EventHandler HotkeyChanged;
+
+        /// <summary>
+        /// Designed for Preview Hotkey and KeyGesture.
+        /// </summary>
+        public bool ValidateKeyGesture { get; set; } = false;
 
         protected virtual void OnHotkeyChanged() => HotkeyChanged?.Invoke(this, EventArgs.Empty);
 
@@ -32,6 +33,7 @@ namespace Flow.Launcher
         public HotkeyControl()
         {
             InitializeComponent();
+
             tbMsgTextOriginal = tbMsg.Text;
             tbMsgForegroundColorOriginal = tbMsg.Foreground;
 
@@ -49,6 +51,8 @@ namespace Flow.Launcher
                 state.ShiftPressed = false;
                 state.WinPressed = false;
             };
+=======
+
         }
 
         private CancellationTokenSource hotkeyUpdateSource;
@@ -111,9 +115,7 @@ namespace Flow.Launcher
                 state.CtrlPressed,
                 key);
 
-            var hotkeyString = hotkeyModel.ToString();
-
-            if (hotkeyString == tbHotkey.Text)
+            if (hotkeyModel.Equals(CurrentHotkey))
             {
                 return false;
             }
@@ -123,57 +125,82 @@ namespace Flow.Launcher
             {
                 await Task.Delay(500, token);
                 if (!token.IsCancellationRequested)
-                    await SetHotkey(hotkeyModel);
+                    await SetHotkeyAsync(hotkeyModel);
             });
 
             return false;
         }
 
-        public async Task SetHotkey(HotkeyModel keyModel, bool triggerValidate = true)
+        public async Task SetHotkeyAsync(HotkeyModel keyModel, bool triggerValidate = true)
         {
-            CurrentHotkey = keyModel;
-
-            tbHotkey.Text = CurrentHotkey.ToString();
+            tbHotkey.Text = keyModel.ToString();
             tbHotkey.Select(tbHotkey.Text.Length, 0);
 
             if (triggerValidate)
             {
-                CurrentHotkeyAvailable = CheckHotkeyAvailability();
-                if (!CurrentHotkeyAvailable)
-                {
-                    tbMsg.Foreground = new SolidColorBrush(Colors.Red);
-                    tbMsg.Text = InternationalizationManager.Instance.GetTranslation("hotkeyUnavailable");
-                }
-                else
-                {
-                    tbMsg.Foreground = new SolidColorBrush(Colors.Green);
-                    tbMsg.Text = InternationalizationManager.Instance.GetTranslation("success");
-                }
-                tbMsg.Visibility = Visibility.Visible;
+                bool hotkeyAvailable = CheckHotkeyAvailability(keyModel, ValidateKeyGesture);
+                CurrentHotkeyAvailable = hotkeyAvailable;
+                SetMessage(hotkeyAvailable);
                 OnHotkeyChanged();
 
                 var token = hotkeyUpdateSource.Token;
                 await Task.Delay(500, token);
                 if (token.IsCancellationRequested)
                     return;
-                FocusManager.SetFocusedElement(FocusManager.GetFocusScope(this), null);
-                Keyboard.ClearFocus();
+
+                if (CurrentHotkeyAvailable)
+                {
+                    CurrentHotkey = keyModel;
+                    // To trigger LostFocus
+                    FocusManager.SetFocusedElement(FocusManager.GetFocusScope(this), null);
+                    Keyboard.ClearFocus();
+                }
+            }
+            else
+            {
+                CurrentHotkey = keyModel;
             }
         }
-
-        public void SetHotkey(string keyStr, bool triggerValidate = true)
+        
+        public Task SetHotkeyAsync(string keyStr, bool triggerValidate = true)
         {
-            SetHotkey(new HotkeyModel(keyStr), triggerValidate);
+            return SetHotkeyAsync(new HotkeyModel(keyStr), triggerValidate);
         }
 
-        private bool CheckHotkeyAvailability() => HotKeyMapper.CheckAvailability(CurrentHotkey);
+        private static bool CheckHotkeyAvailability(HotkeyModel hotkey, bool validateKeyGesture) => hotkey.Validate(validateKeyGesture) && HotKeyMapper.CheckAvailability(hotkey);
 
         public new bool IsFocused => tbHotkey.IsFocused;
 
         private void tbHotkey_LostFocus(object sender, RoutedEventArgs e)
         {
-            tbMsg.Text = tbMsgTextOriginal;
-            tbMsg.Foreground = tbMsgForegroundColorOriginal;
+            tbHotkey.Text = CurrentHotkey?.ToString() ?? "";
+            tbHotkey.Select(tbHotkey.Text.Length, 0);
+        }
+
+        private void tbHotkey_GotFocus(object sender, RoutedEventArgs e)
+        {
+            ResetMessage();
+        }
+
+        private void ResetMessage()
+        {
+            tbMsg.Text = InternationalizationManager.Instance.GetTranslation("flowlauncherPressHotkey");
+            tbMsg.SetResourceReference(TextBox.ForegroundProperty, "Color05B");
+        }
+
+        private void SetMessage(bool hotkeyAvailable)
+        {
+            if (!hotkeyAvailable)
+            {
+                tbMsg.Foreground = new SolidColorBrush(Colors.Red);
+                tbMsg.Text = InternationalizationManager.Instance.GetTranslation("hotkeyUnavailable");
+            }
+            else
+            {
+                tbMsg.Foreground = new SolidColorBrush(Colors.Green);
+                tbMsg.Text = InternationalizationManager.Instance.GetTranslation("success");
+            }
+            tbMsg.Visibility = Visibility.Visible;
         }
     }
 }

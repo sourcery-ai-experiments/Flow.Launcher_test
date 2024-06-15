@@ -1,9 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Windows.Controls;
-using Flow.Launcher.Infrastructure.Storage;
-using Flow.Launcher.Plugin.SharedCommands;
 
 namespace Flow.Launcher.Plugin.Url
 {
@@ -72,9 +70,9 @@ namespace Flow.Launcher.Plugin.Url
                                 
                                 return true;
                             }
-                            catch(Exception ex)
+                            catch(Exception)
                             {
-                                context.API.ShowMsg(string.Format(context.API.GetTranslation("flowlauncher_plugin_url_canot_open_url"), raw));
+                                context.API.ShowMsg(string.Format(context.API.GetTranslation("flowlauncher_plugin_url_cannot_open_url"), raw));
                                 return false;
                             }
                         }

@@ -6,7 +6,9 @@ namespace Flow.Launcher.Plugin.Shell
     {
         public Shell Shell { get; set; } = Shell.Cmd;
         
-        public bool ReplaceWinR { get; set; } = true;
+        public bool ReplaceWinR { get; set; } = false;
+
+        public bool CloseShellAfterPress { get; set; } = false;
         
         public bool LeaveShellOpen { get; set; }
 
@@ -36,6 +38,6 @@ namespace Flow.Launcher.Plugin.Shell
         Cmd = 0,
         Powershell = 1,
         RunCommand = 2,
-
+        Pwsh = 3,
     }
 }

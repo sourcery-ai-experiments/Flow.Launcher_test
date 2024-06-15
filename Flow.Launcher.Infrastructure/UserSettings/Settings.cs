@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Text.Json.Serialization;
+using System.Windows;
 using Flow.Launcher.Plugin;
 using Flow.Launcher.Plugin.SharedModels;
-using Flow.Launcher;
 using Flow.Launcher.ViewModel;
 
 namespace Flow.Launcher.Infrastructure.UserSettings
@@ -13,11 +13,13 @@ namespace Flow.Launcher.Infrastructure.UserSettings
     public class Settings : BaseModel
     {
         private string language = "en";
+        private string _theme = Constant.DefaultTheme;
         public string Hotkey { get; set; } = $"{KeyConstant.Alt} + {KeyConstant.Space}";
         public string OpenResultModifiers { get; set; } = KeyConstant.Alt;
         public string ColorScheme { get; set; } = "System";
         public bool ShowOpenResultHotkey { get; set; } = true;
         public double WindowSize { get; set; } = 580;
+        public string PreviewHotkey { get; set; } = $"F1";
 
         public string Language
         {
@@ -28,7 +30,18 @@ namespace Flow.Launcher.Infrastructure.UserSettings
                 OnPropertyChanged();
             }
         }
-        public string Theme { get; set; } = Constant.DefaultTheme;
+        public string Theme
+        {
+            get => _theme;
+            set
+            {
+                if (value == _theme)
+                    return;
+                _theme = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(MaxResultsToShow));
+            }
+        }
         public bool UseDropShadowEffect { get; set; } = false;
         public string QueryBoxFont { get; set; } = FontFamily.GenericSansSerif.Name;
         public string QueryBoxFontStyle { get; set; }
@@ -41,7 +54,19 @@ namespace Flow.Launcher.Infrastructure.UserSettings
         public bool UseGlyphIcons { get; set; } = true;
         public bool UseAnimation { get; set; } = true;
         public bool UseSound { get; set; } = true;
+        public double SoundVolume { get; set; } = 50;
+
+        public bool UseClock { get; set; } = true;
+        public bool UseDate { get; set; } = false;
+        public string TimeFormat { get; set; } = "hh:mm tt";
+        public string DateFormat { get; set; } = "MM'/'dd ddd";
         public bool FirstLaunch { get; set; } = true;
+
+        public double SettingWindowWidth { get; set; } = 1000;
+        public double SettingWindowHeight { get; set; } = 700;
+        public double SettingWindowTop { get; set; }
+        public double SettingWindowLeft { get; set; }
+        public System.Windows.WindowState SettingWindowState { get; set; } = WindowState.Normal;
 
         public int CustomExplorerIndex { get; set; } = 0;
 
@@ -120,8 +145,7 @@ namespace Flow.Launcher.Infrastructure.UserSettings
                 PrivateArg = "-private",
                 EnablePrivate = false,
                 Editable = false
-            }
-            ,
+            },
             new()
             {
                 Name = "MS Edge",
@@ -137,6 +161,8 @@ namespace Flow.Launcher.Infrastructure.UserSettings
         /// when false Alphabet static service will always return empty results
         /// </summary>
         public bool ShouldUsePinyin { get; set; } = false;
+        public bool AlwaysPreview { get; set; } = false;
+        public bool AlwaysStartEn { get; set; } = false;
 
         [JsonInclude, JsonConverter(typeof(JsonStringEnumConverter))]
         public SearchPrecisionScore QuerySearchPrecision { get; private set; } = SearchPrecisionScore.Regular;
@@ -171,11 +197,31 @@ namespace Flow.Launcher.Infrastructure.UserSettings
 
         public double WindowLeft { get; set; }
         public double WindowTop { get; set; }
+        
+        /// <summary>
+        /// Custom left position on selected monitor
+        /// </summary>
+        public double CustomWindowLeft { get; set; } = 0;
+        
+        /// <summary>
+        /// Custom top position on selected monitor
+        /// </summary>
+        public double CustomWindowTop { get; set; } = 0;
+        
         public int MaxResultsToShow { get; set; } = 5;
         public int ActivateTimes { get; set; }
 
 
         public ObservableCollection<CustomPluginHotkey> CustomPluginHotkeys { get; set; } = new ObservableCollection<CustomPluginHotkey>();
+
+        public ObservableCollection<CustomShortcutModel> CustomShortcuts { get; set; } = new ObservableCollection<CustomShortcutModel>();
+
+        [JsonIgnore]
+        public ObservableCollection<BuiltinShortcutModel> BuiltinShortcuts { get; set; } = new()
+        {
+            new BuiltinShortcutModel("{clipboard}", "shortcut_clipboard_description", Clipboard.GetText), 
+            new BuiltinShortcutModel("{active_explorer_path}", "shortcut_active_explorer_path", FileExplorerHelper.GetActiveExplorerPath)
+        };
 
         public bool DontPromptUpdateMsg { get; set; }
         public bool EnableUpdateLog { get; set; }
@@ -193,14 +239,26 @@ namespace Flow.Launcher.Infrastructure.UserSettings
             }
         }
         public bool LeaveCmdOpen { get; set; }
-        public bool HideWhenDeactive { get; set; } = true;
-        public bool RememberLastLaunchLocation { get; set; }
+        public bool HideWhenDeactivated { get; set; } = true;
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public SearchWindowScreens SearchWindowScreen { get; set; } = SearchWindowScreens.Cursor;
+        
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public SearchWindowAligns SearchWindowAlign { get; set; } = SearchWindowAligns.Center;
+
+        public int CustomScreenNumber { get; set; } = 1;
+
         public bool IgnoreHotkeysOnFullscreen { get; set; }
 
         public HttpProxy Proxy { get; set; } = new HttpProxy();
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public LastQueryMode LastQueryMode { get; set; } = LastQueryMode.Selected;
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public AnimationSpeeds AnimationSpeed { get; set; } = AnimationSpeeds.Medium;
+        public int CustomAnimationLength { get; set; } = 360;
 
 
         // This needs to be loaded last by staying at the bottom
@@ -219,5 +277,31 @@ namespace Flow.Launcher.Infrastructure.UserSettings
         System,
         Light,
         Dark
+    }
+    
+    public enum SearchWindowScreens
+    {
+        RememberLastLaunchLocation,
+        Cursor,
+        Focus,
+        Primary,
+        Custom
+    }
+    
+    public enum SearchWindowAligns
+    {
+        Center,
+        CenterTop,
+        LeftTop,
+        RightTop,
+        Custom
+    }
+
+    public enum AnimationSpeeds
+    {
+        Slow,
+        Medium,
+        Fast,
+        Custom
     }
 }

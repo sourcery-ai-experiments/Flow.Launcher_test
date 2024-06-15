@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0-windows</TargetFramework>
+    <TargetFramework>net7.0-windows</TargetFramework>
     <ProjectGuid>{8451ECDD-2EA4-4966-BB0A-7BBC40138E80}</ProjectGuid>
     <UseWPF>true</UseWPF>
     <OutputType>Library</OutputType>
@@ -14,10 +14,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>2.1.0</Version>
-    <PackageVersion>2.1.0</PackageVersion>
-    <AssemblyVersion>2.1.0</AssemblyVersion>
-    <FileVersion>2.1.0</FileVersion>
+    <Version>4.3.0</Version>
+    <PackageVersion>4.3.0</PackageVersion>
+    <AssemblyVersion>4.3.0</AssemblyVersion>
+    <FileVersion>4.3.0</FileVersion>
     <PackageId>Flow.Launcher.Plugin</PackageId>
     <Authors>Flow-Launcher</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -26,6 +26,7 @@
     <PackageTags>flowlauncher</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageReadmeFile>Readme.md</PackageReadmeFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(APPVEYOR)' == 'True'">
@@ -42,6 +43,7 @@
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
+    <DocumentationFile>..\Output\Debug\Flow.Launcher.Plugin.xml</DocumentationFile>
   </PropertyGroup>
   
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -55,7 +57,7 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <None Include="README.md" />
+    <None Include="Readme.md" Pack="true" PackagePath="\"/>
     <None Include="FodyWeavers.xml" />
   </ItemGroup>
 
@@ -64,8 +66,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
-    <PackageReference Include="JetBrains.Annotations" Version="2021.2.0" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+    <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
     <PackageReference Include="PropertyChanged.Fody" Version="3.4.0" />
   </ItemGroup>
 

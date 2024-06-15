@@ -1,6 +1,6 @@
-using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Flow.Launcher.Infrastructure;
@@ -11,7 +11,6 @@ namespace Flow.Launcher.Core.Plugin
     internal class PythonPlugin : JsonRPCPlugin
     {
         private readonly ProcessStartInfo _startInfo;
-        public override string SupportedLanguage { get; set; } = AllowedLanguage.Python;
 
         public PythonPlugin(string filename)
         {
@@ -24,7 +23,6 @@ namespace Flow.Launcher.Core.Plugin
                 RedirectStandardError = true,
             };
 
-            // temp fix for issue #667
             var path = Path.Combine(Constant.ProgramDirectory, JsonRPC);
             _startInfo.EnvironmentVariables["PYTHONPATH"] = path;
 
@@ -39,15 +37,16 @@ namespace Flow.Launcher.Core.Plugin
 
         protected override Task<Stream> RequestAsync(JsonRPCRequestModel request, CancellationToken token = default)
         {
-            _startInfo.ArgumentList[2] = request.ToString();
+            _startInfo.ArgumentList[2] = JsonSerializer.Serialize(request, RequestSerializeOption);
 
             return ExecuteAsync(_startInfo, token);
         }
 
         protected override string Request(JsonRPCRequestModel rpcRequest, CancellationToken token = default)
         {
-            _startInfo.ArgumentList[2] = rpcRequest.ToString();
-            _startInfo.WorkingDirectory = context.CurrentPluginMetadata.PluginDirectory;
+            // since this is not static, request strings will build up in ArgumentList if index is not specified
+            _startInfo.ArgumentList[2] = JsonSerializer.Serialize(rpcRequest, RequestSerializeOption);
+            _startInfo.WorkingDirectory = Context.CurrentPluginMetadata.PluginDirectory;
             // TODO: Async Action
             return Execute(_startInfo);
         }
