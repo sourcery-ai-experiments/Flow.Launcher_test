@@ -10,8 +10,9 @@ jobs:
     name: update-milestone
 
     steps:
-      - uses: radcortez/milestone-set-action@main
-        name: milestone set
+      - uses: andrefcdias/add-to-milestone
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          milestone: "+([0-9]).+([0-9]).+([0-9])"
+          use-expression: true
 
