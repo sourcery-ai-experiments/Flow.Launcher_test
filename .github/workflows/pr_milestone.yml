@@ -1,11 +1,17 @@
+name: Update Milestone
+
 on:
   pull_request:
-    types: [opened]
+    types: [opened, reopened]
 
 jobs:
-  test:
+  update:
     runs-on: ubuntu-latest
+    name: update-milestone
+
     steps:
-    - uses: Code-Hex/auto-milestone-binder@v1.0.2
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: radcortez/milestone-set-action@main
+        name: milestone set
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+
