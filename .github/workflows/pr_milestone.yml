@@ -1,4 +1,4 @@
-name: Update Milestone
+name: Set Milestone
 
 on:
   pull_request:
@@ -7,7 +7,7 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
-    name: update-milestone
+    name: set-milestone
 
     steps:
       - uses: andrefcdias/add-to-milestone
