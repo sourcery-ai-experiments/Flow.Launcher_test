@@ -1,6 +1,8 @@
 name: Assign PR to creator
 
-on: [pull_request]
+on:
+  pull_request:
+    types: [opened]
 
 jobs:
   automation:
